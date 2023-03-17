@@ -1,0 +1,1226 @@
+{
+	"info": {
+		"_postman_id": "bdd1ca3f-0d02-41c4-8cb1-8416f5abbaef",
+		"name": "Payments Services",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24954811"
+	},
+	"item": [
+		{
+			"name": "CC-API",
+			"item": [
+				{
+					"name": "read:accounts",
+					"item": [
+						{
+							"name": "Get Accounts",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response time is less than 200ms\", function () {\r",
+											"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{api}}/accounts/2512",
+									"host": [
+										"{{api}}"
+									],
+									"path": [
+										"accounts",
+										"2512"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Details w/o real-time",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{cc-api:apiUrl}}/account/5900001228827406/detail?resolution=1",
+									"host": [
+										"{{cc-api:apiUrl}}"
+									],
+									"path": [
+										"account",
+										"5900001228827406",
+										"detail"
+									],
+									"query": [
+										{
+											"key": "resolution",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Details w/real-time",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{cc-api:apiUrl}}/account/5900001228827406/detail?resolution=2",
+									"host": [
+										"{{cc-api:apiUrl}}"
+									],
+									"path": [
+										"account",
+										"5900001228827406",
+										"detail"
+									],
+									"query": [
+										{
+											"key": "resolution",
+											"value": "2"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Transactions",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{cc-api:apiUrl}}/account/5500003368564098/transactions",
+									"host": [
+										"{{cc-api:apiUrl}}"
+									],
+									"path": [
+										"account",
+										"5500003368564098",
+										"transactions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{cc-api:bearerToken}}",
+								"type": "string"
+							}
+						]
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const echoOktaPostRequest = {",
+									"    url: pm.environment.get('cc-api:auth:server'),",
+									"    method: 'POST',",
+									"    header: 'Content-Type:application/x-www-form-urlencoded',",
+									"    body: {",
+									"        mode: 'urlencoded',",
+									"        urlencoded: [",
+									"            { key: \"client_id\", value: pm.environment.get('cc-api:auth:clientId'), disabled: false },",
+									"            { key: \"client_secret\", value: pm.environment.get('cc-api:auth:clientSecret'), disabled: false },",
+									"            { key: \"audience\", value: pm.environment.get('cc-api:auth:audience'), disabled: false },",
+									"            { key: \"grant_type\", value: pm.environment.get('cc-api:auth:grantType'), disabled: false },",
+									"            { key: \"scope\", value: \"read:account\", disabled: false }",
+									"        ]",
+									"    }",
+									"};",
+									"",
+									"var getToken = true;",
+									"",
+									"if (!pm.environment.get('cc-api:bearerToken:expires') ||",
+									"    !pm.environment.get('cc-api:bearerToken')) {",
+									"    console.log('Token or expiry date are missing')",
+									"} else if (pm.environment.get('cc-api:bearerToken:expires') <= (new Date()).getTime()) {",
+									"    console.log('Token is expired')",
+									"} else {",
+									"    getToken = false;",
+									"    console.log('Token and expiry date are all good');",
+									"}",
+									"",
+									"if (getToken === true) {",
+									"",
+									"    pm.sendRequest(echoOktaPostRequest, function (err, res) {",
+									"        console.log(err ? err : res.json());",
+									"        if (err === null) {",
+									"            console.log('Saving the token and expiry date')",
+									"            var responseJson = res.json();",
+									"            pm.environment.set('cc-api:bearerToken', responseJson.access_token)",
+									"",
+									"            var expiryDate = new Date();",
+									"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.expires_in);",
+									"            pm.environment.set('cc-api:bearerToken:expires', expiryDate.getTime());",
+									"        }",
+									"    });",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "healthcheck",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{cc-api:apiUrl}}/healthcheck",
+							"host": [
+								"{{cc-api:apiUrl}}"
+							],
+							"path": [
+								"healthcheck"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "FIS-API",
+			"item": [
+				{
+					"name": "Balance inquiry",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"pan\":\r\n    {\r\n        \"plainText\": \"5900001638473239\",\r\n        \"cipherText\": \"\",\r\n        \"alias\": \"\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/credit/balances/v1/inquiry",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"credit",
+								"balances",
+								"v1",
+								"inquiry"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bal inquiry with Invalid data",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"pan\":\r\n    {\r\n        \"plainText\": \"5900001638473239\",\r\n        \"cipherText\": \"\",\r\n        \"alias\": \"\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/credit/balances/v1/inquiry",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"credit",
+								"balances",
+								"v1",
+								"inquiry"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Cardholder Information",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"pan\": {\r\n    \"plainText\": \"4053232690633133\",\r\n    \"cipherText\": \"\",\r\n    \"alias\": \"\"\r\n  },\r\n  \"mailingaddress\": {\r\n    \"addressline1\": \"116 E\",\r\n    \"addressline2\": \"59th St\",\r\n    \"addressline3\": \"Park Avenue\",\r\n    \"addressline4\": \"string\",\r\n    \"city\": \"New York\",\r\n    \"state\": \"NY\",\r\n    \"zipcode\": 10001,\r\n    \"countrycode\": 840\r\n  },\r\n  \"homephone\": \"1234567890\",\r\n  \"cellphone\": \"1122334455\",\r\n  \"workphone\": \"1112223334\",\r\n  \"email\": \"testemail@test.com\"",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/cardmgmt/ccc/v1/updatecontactdetails",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"cardmgmt",
+								"ccc",
+								"v1",
+								"updatecontactdetails"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Cardholder Info with invalid data",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"pan\": {\r\n    \"plainText\": \"4053232690633133\",\r\n    \"cipherText\": \"\",\r\n    \"alias\": \"\"\r\n  },\r\n  \"mailingaddress\": {\r\n    \"addressline1\": \"116 E\",\r\n    \"addressline2\": \"59th St\",\r\n    \"addressline3\": \"Park Avenue\",\r\n    \"addressline4\": \"string\",\r\n    \"city\": \"New York\",\r\n    \"state\": \"NY\",\r\n    \"zipcode\": 10001,\r\n    \"countrycode\": 840\r\n  },\r\n  \"homephone\": \"1234567890\",\r\n  \"cellphone\": \"1122334455\",\r\n  \"workphone\": \"1112223334\",\r\n  \"email\": \"testemail@test.com\"",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/cardmgmt/ccc/v1/updatecontactdetails",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"cardmgmt",
+								"ccc",
+								"v1",
+								"updatecontactdetails"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "General Inquiry",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"pan\": {\r\n    \"plainText\": \"4005550000017401\",\r\n    \"cipherText\": \"\",\r\n    \"alias\": \"\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/credit/general-inquiry/v1",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"credit",
+								"general-inquiry",
+								"v1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "General Inquiry with Invalid details",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"pan\": {\r\n    \"plainText\": \"4005550000017401\",\r\n    \"cipherText\": \"\",\r\n    \"alias\": \"\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/credit/general-inquiry/v1",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"credit",
+								"general-inquiry",
+								"v1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Credit Limit and Spend Limit",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"pan\": {\r\n    \"plainText\": \"4053232690633131\",\r\n    \"cipherText\": \"\",\r\n    \"alias\": \"\"\r\n  },\r\n  \"creditLimit\": \"500\",\r\n  \"cashAdvanceLimit\": \"500\",\r\n  \"tempCreditLimitChangeAmount\": \"2500\",\r\n  \"tclcExpirationDate\": \"20120201\",\r\n  \"preApprovedCreditLimit\": \"string\",\r\n  \"requestorID\": \"requestor\",\r\n  \"creditSourceCode\": \"EZ\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/creditlimitchange",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"creditlimitchange"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Credit Limit and Spend Limit - with Invalid",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"pan\": {\r\n    \"plainText\": \"4053232690633131\",\r\n    \"cipherText\": \"\",\r\n    \"alias\": \"\"\r\n  },\r\n  \"creditLimit\": \"500\",\r\n  \"cashAdvanceLimit\": \"500\",\r\n  \"tempCreditLimitChangeAmount\": \"2500\",\r\n  \"tclcExpirationDate\": \"20120201\",\r\n  \"preApprovedCreditLimit\": \"string\",\r\n  \"requestorID\": \"requestor\",\r\n  \"creditSourceCode\": \"EZ\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/creditlimitchange",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"creditlimitchange"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add New Account",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"corpID\": \"30\",\r\n  \"accountBinPrefix\": \"534607\",\r\n  \"commercialCardIndicator\": \"\",\r\n  \"product\": \"MVR\",\r\n  \"subproduct\": \"EMV\",\r\n  \"vipIndicator\": \"\",\r\n  \"lastNameOne\": \"Giant\",\r\n  \"firstNameOne\": \"Green\",\r\n  \"middleNameOne\": \"D\",\r\n  \"prefixNameOne\": \"\",\r\n  \"suffixNameOne\": \"\",\r\n  \"lastNameTwo\": \"Peas\",\r\n  \"firstNameTwo\": \"Green\",\r\n  \"middleNameTwo\": \"\",\r\n  \"prefixNameTwo\": \"\",\r\n  \"suffixNameTwo\": \"\",\r\n  \"lastNameThree\": \"\",\r\n  \"firstNameThree\": \"\",\r\n  \"middleNameThree\": \"\",\r\n  \"prefixNameThree\": \"\",\r\n  \"suffixNameThree\": \"\",\r\n  \"lastNameFour\": \"\",\r\n  \"firstNameFour\": \"\",\r\n  \"middleNameFour\": \"\",\r\n  \"prefixNameFour\": \"\",\r\n  \"suffixNameFour\": \"\",\r\n  \"corpName\": \"\",\r\n  \"companyID\": \"\",\r\n  \"sublevelNumber\": \"\",\r\n  \"sublevelID\": \"\",\r\n  \"consolidatedAccountType\": \"\",\r\n  \"consolidatedAccountBin\": \"\",\r\n  \"consolidatedAccountSequence\": \"\",\r\n  \"checkOrderCode\": \"\",\r\n  \"checkStartNumber\": \"\",\r\n  \"creditLifeInsurance\": \"\",\r\n  \"addressLineOne\": \"2000 Green Peas Avenue\",\r\n  \"homePhone\": \"9996777889\",\r\n  \"blockCode\": \"\",\r\n  \"reclassCode\": \"\",\r\n  \"screenRefresh\": \"\",\r\n  \"addressLineTwo\": \"\",\r\n  \"businessPhone\": \"\",\r\n  \"finalScore\": \"625\",\r\n  \"addressLineThree\": \"\",\r\n  \"thirdPhoneIndicator\": \"\",\r\n  \"thirdPhone\": \"\",\r\n  \"sourceCode\": \"\",\r\n  \"city\": \"Largo\",\r\n  \"personResponsibleNumber\": \"\",\r\n  \"approvalType\": \"\",\r\n  \"state\": \"FL\",\r\n  \"zip\": \"33782-4456\",\r\n  \"billCode\": \"MTRTVAR4\",\r\n  \"billDay\": \"17\",\r\n  \"creditLimit\": \"500\",\r\n  \"statementGroupCode\": \"\",\r\n  \"financeCharge\": \"\",\r\n  \"notifiedBillingCode\": \"\",\r\n  \"notifiedBillingCodeEffectiveDate\": \"\",\r\n  \"cashLimit\": \"\",\r\n  \"languageCode\": \"\",\r\n  \"memo\": \"\",\r\n  \"numberCardOneIssueNameOne\": \"0\",\r\n  \"numberCardTwoIssueNameOne\": \"1\",\r\n  \"primaryCardholderSpecialHandling\": \"\",\r\n  \"creditAssociationOne\": \"1\",\r\n  \"primaryCardholderSexCode\": \"\",\r\n  \"birthDateOne\": \"19851129\",\r\n  \"ssnOne\": \"657570092\",\r\n  \"cardOneType\": \"\",\r\n  \"cardTwoType\": \"M\",\r\n  \"numberCardOneIssueNameTwo\": \"0\",\r\n  \"numberCardTwoIssueNameTwo\": \"0\",\r\n  \"secondaryCardholderSpecialHandling\": \"\",\r\n  \"creditAssociationTwo\": \"2\",\r\n  \"secondaryCardholderSexCode\": \"\",\r\n  \"birthDateTwo\": \"19781004\",\r\n  \"ssnTwo\": \"663459898\",\r\n  \"cardAnnualFeeIndicator\": \"\",\r\n  \"secretCodeIndicator\": \"\",\r\n  \"numberCardOneIssueNameThree\": \"0\",\r\n  \"numberCardTwoIssueNameThree\": \"0\",\r\n  \"thirdCardholderSpecialHandling\": \"\",\r\n  \"creditAssociationThree\": \"\",\r\n  \"thirdCardholderSexCode\": \"\",\r\n  \"birthDateThree\": \"\",\r\n  \"ssnThree\": \"\",\r\n  \"rushCardMethod\": \"\",\r\n  \"suffix\": \"\",\r\n  \"numberCardOneIssueNameFour\": \"0\",\r\n  \"numberCardTwoIssueNameFour\": \"0\",\r\n  \"fourthCardholderSpecialHandling\": \"\",\r\n  \"creditAssociationFour\": \"\",\r\n  \"fourthCardholderSexCode\": \"\",\r\n  \"birthDateFour\": \"\",\r\n  \"ssnFour\": \"\",\r\n  \"createPlastics\": \"Y\",\r\n  \"paymentBookCode\": \"\",\r\n  \"paymentBookNumber\": \"\",\r\n  \"directMailIndicator\": \"\",\r\n  \"emergencyCardReplacementIndicator\": \"\",\r\n  \"expirationDateOverride\": \"\",\r\n  \"uniqueCustomerIDNumber\": \"\",\r\n  \"customerIDNameOneNumber\": \"\",\r\n  \"customerIDNameTwoNumber\": \"\",\r\n  \"customerIDNameThreeNumber\": \"\",\r\n  \"customerIDNameFourNumber\": \"\",\r\n  \"country\": \"\",\r\n  \"foreignIndicator\": \"\",\r\n  \"primaryDeliveryPoint\": \"\",\r\n  \"primaryDomicileBSB\": \"\",\r\n  \"primaryOwnerBSB\": \"\",\r\n  \"rushDeliveryMethod\": \"\",\r\n  \"primaryCardholderPhotoIndicator\": \"\",\r\n  \"secondaryCardholderPhotoIndicator\": \"\",\r\n  \"thirdCardholderPhotoIndicator\": \"\",\r\n  \"fourthCardholderPhotoIndicator\": \"\",\r\n  \"primaryCardholderMaritalStatus\": \"\",\r\n  \"secondaryCardholderMaritalStatus\": \"\",\r\n  \"thirdCardholderMaritalStatus\": \"\",\r\n  \"fourthCardholderMaritalStatus\": \"\",\r\n  \"governmentChargeIndicator\": \"\",\r\n  \"specialNeedsCode\": \"\",\r\n  \"currencyCode\": \"\",\r\n  \"loanTerms\": \"\",\r\n  \"offlinePINOption\": \"\",\r\n  \"fiscalYearEndMonth\": \"\",\r\n  \"payCode\": \"\",\r\n  \"payStatus\": \"\",\r\n  \"autoPayEffectiveDate\": \"\",\r\n  \"originalCenterID\": \"\",\r\n  \"autoPayPercentage\": \"\",\r\n  \"autoPayAmount\": \"\",\r\n  \"originalServiceCenterID\": \"\",\r\n  \"autoPayDay\": \"\",\r\n  \"autoPayFrequency\": \"\",\r\n  \"previousCenterID\": \"\",\r\n  \"ddaAcount\": \"\",\r\n  \"autoPayAccountType\": \"\",\r\n  \"aBARoutingNumber\": \"\",\r\n  \"bankAccountName\": \"\",\r\n  \"bankAccountCode\": \"\",\r\n  \"initialPaymentIndicator\": \"\",\r\n  \"holdPaymentExempt\": \"\",\r\n  \"serviceCenterIDUpdateDate\": \"\",\r\n  \"tempAmount\": \"\",\r\n  \"directDebitHoldMonthsNumber\": \"\",\r\n  \"loyaltyCode\": \"\",\r\n  \"companyName\": \"\",\r\n  \"sublevelTwo\": \"\",\r\n  \"sublevelTwoName\": \"\",\r\n  \"sublevelThree\": \"\",\r\n  \"sublevelThreeName\": \"\",\r\n  \"sublevelFour\": \"\",\r\n  \"sublevelFourName\": \"\",\r\n  \"sublevelFive\": \"\",\r\n  \"sublevelFiveName\": \"\",\r\n  \"sublevelSix\": \"\",\r\n  \"sublevelSixName\": \"\",\r\n  \"promoMailGroup\": \"\",\r\n  \"statementMailPreferences\": \"\",\r\n  \"statementMailSublevel\": \"\",\r\n  \"mcAuditNumber\": \"\",\r\n  \"taxExemptIndicator\": \"\",\r\n  \"letterMailPreference\": \"\",\r\n  \"letterMailSublevel\": \"\",\r\n  \"letterMailSublevelID\": \"\",\r\n  \"transferSublevelNumber\": \"\",\r\n  \"transferSublevelID\": \"\",\r\n  \"trackingCode\": \"\",\r\n  \"branchNumber\": \"\",\r\n  \"transferOption\": \"\",\r\n  \"countryCode\": \"\",\r\n  \"branchAttentionTo\": \"\",\r\n  \"parameterSettings\": \"\",\r\n  \"activeHours\": \"\",\r\n  \"tempAuthorizationBlockCode\": \"\",\r\n  \"cardMailPreference\": \"\",\r\n  \"cardMailSublevel\": \"\",\r\n  \"cardMailSublevelID\": \"\",\r\n  \"mobilePhone\": \"\",\r\n  \"contactPhone\": \"\",\r\n  \"mailAddressLineOne\": \"\",\r\n  \"mailAddressLineTwo\": \"\",\r\n  \"mailAddressLineThree\": \"\",\r\n  \"mailCity\": \"\",\r\n  \"mailState\": \"\",\r\n  \"mailZIP\": \"\",\r\n  \"mailCountry\": \"\",\r\n  \"mailForeignAddressIndicator\": \"\",\r\n  \"mailDeliveryPoint\": \"\",\r\n  \"embossNameOne\": \"\",\r\n  \"embossNameTwo\": \"\",\r\n  \"embossNameThree\": \"\",\r\n  \"embossNameFour\": \"\",\r\n  \"embossLineFour\": \"\",\r\n  \"salutationTitle\": \"\",\r\n  \"primaryEmail\": \"\",\r\n  \"primaryFax\": \"\",\r\n  \"primaryLetterDeliveryCode\": \"\",\r\n  \"primaryStatementDeliveryCode\": \"\",\r\n  \"primaryCardDeliveryCode\": \"\",\r\n  \"primaryPINDeliveryCode\": \"\",\r\n  \"tempBeginingDate\": \"\",\r\n  \"tempEndDate\": \"\",\r\n  \"tempAddressLineOne\": \"\",\r\n  \"tempAddressLineTwo\": \"\",\r\n  \"tempAddressLineThree\": \"\",\r\n  \"tempAddressLineFour\": \"\",\r\n  \"tempZIPCode\": \"\",\r\n  \"tempStateCode\": \"\",\r\n  \"tempCountryCode\": \"\",\r\n  \"tempMailForeignAddressIndicator\": \"\",\r\n  \"tempDeliveryPoint\": \"\",\r\n  \"tempEmail\": \"\",\r\n  \"tempFaxNumber\": \"\",\r\n  \"tempStatementDeliveryCode\": \"\",\r\n  \"tempLetterDeliveryCode\": \"\",\r\n  \"tempCardDeliveryCode\": \"\",\r\n  \"tempPINDeliveryCode\": \"\",\r\n  \"tempDomicileBSB\": \"\",\r\n  \"accountActionCode\": \"\",\r\n  \"applicationID\": \"\",\r\n  \"taxIndicator\": \"\",\r\n  \"regulatoryState\": \"\",\r\n  \"bypassRoutingNumberCheck\": \"\",\r\n  \"userDataOne\": \"ONN\",\r\n  \"userDataTwo\": \"\",\r\n  \"userDataThree\": \"\",\r\n  \"userDataFour\": \"\",\r\n  \"userDataFive\": \"\",\r\n  \"userDataSix\": \"\",\r\n  \"userDataSeven\": \"\",\r\n  \"userDataEight\": \"\",\r\n  \"userDataNine\": \"\",\r\n  \"userDataTen\": \"\",\r\n  \"userDataEleven\": \"\",\r\n  \"userNumberOne\": \"\",\r\n  \"userNumberTwo\": \"\",\r\n  \"userNumberThree\": \"\",\r\n  \"loyaltyIndicator\": \"\",\r\n  \"annualStatement\": \"\",\r\n  \"fleetCardAccountType\": \"\",\r\n  \"fleetAccountID\": \"\",\r\n  \"fleetCardProductRestriction\": \"\",\r\n  \"fleetCardPrompt\": \"\",\r\n  \"fleetCardAuthorizationOverride\": \"\",\r\n  \"physicalAddressLineOne\": \"\",\r\n  \"physicalAddressLineTwo\": \"\",\r\n  \"physicalAddressCity\": \"\",\r\n  \"physicalAddressState\": \"\",\r\n  \"physicalAddressZIP\": \"\",\r\n  \"nearestRelative\": \"\",\r\n  \"relativePhone\": \"\",\r\n  \"overdraftProtectionIndicator\": \"\",\r\n  \"reinstateChangeAccountIndicator\": \"\",\r\n  \"primaryAccountIndicator\": \"\",\r\n  \"specialAccountIndicator\": \"\",\r\n  \"minPayCode\": \"\",\r\n  \"rewardsIndicator\": \"\",\r\n  \"feeOptionIndicator\": \"\",\r\n  \"bonusOptionIndicator\": \"\",\r\n  \"rewardsCapOptionIndicator\": \"\",\r\n  \"relationshipManagerNumber\": \"\",\r\n  \"salesRepInitials\": \"\",\r\n  \"approvingOfficerNumber\": \"\",\r\n  \"referingOfficerNumber\": \"\",\r\n  \"relationshipBankerNumber\": \"\",\r\n  \"coApprovingOfficer\": \"\",\r\n  \"bsaOfficer\": \"\",\r\n  \"salesOfficer\": \"\",\r\n  \"maintenanceOfficer\": \"\",\r\n  \"cliCoApprovingOfficer\": \"\",\r\n  \"agreementExpirationDate\": \"\",\r\n  \"deedTrustExpirationDate\": \"\",\r\n  \"convertedOpenDate\": \"\",\r\n  \"maturityDate\": \"\",\r\n  \"hazardingDate\": \"\",\r\n  \"floodingDate\": \"\",\r\n  \"promoAcceptanceSource\": \"\",\r\n  \"promoID\": \"\",\r\n  \"atmAccount\": \"\",\r\n  \"balanceTransferPromoExtension\": \"\",\r\n  \"purchasePromoExtension\": \"\",\r\n  \"overdraftAccount\": \"\",\r\n  \"profitCode\": \"\",\r\n  \"relationshipCode\": \"\",\r\n  \"campaignCode\": \"\",\r\n  \"employeeProfitCenter\": \"\",\r\n  \"collateralDescription\": \"\",\r\n  \"scorecardScore\": \"\",\r\n  \"institutionID\": \"\",\r\n  \"cviScore\": \"\",\r\n  \"cviReasonCodeOne\": \"\",\r\n  \"cviReasonCodeTwo\": \"\",\r\n  \"cviReasonCodeThree\": \"\",\r\n  \"cviReasonCodeFour\": \"\",\r\n  \"cviReasonCodeFive\": \"\",\r\n  \"cviReasonCodeSix\": \"\",\r\n  \"fraudDefenderScore\": \"\",\r\n  \"qAScore\": \"\",\r\n  \"fraudDefenderReasonCodeOne\": \"\",\r\n  \"fraudDefenderReasonCodeTwo\": \"\",\r\n  \"fraudDefenderReasonCodeThree\": \"\",\r\n  \"fraudDefenderReasonCodeFour\": \"\",\r\n  \"fraudDefenderReasonCodeFive\": \"\",\r\n  \"fraudDefenderReasonCodeSix\": \"\",\r\n  \"originalBeaconScore\": \"\",\r\n  \"originalBankruptcyScore\": \"\",\r\n  \"suppressPINMailer\": \"\",\r\n  \"embossNameIndicator\": \"\",\r\n  \"creditLifeAgeReviewOption\": \"\",\r\n  \"otherPhoneTwo\": \"\",\r\n  \"otherPhoneTwoType\": \"\",\r\n  \"otherPhoneThree\": \"\",\r\n  \"otherPhoneThreeType\": \"\",\r\n  \"collateralAccount\": \"\",\r\n  \"consolidatedCardStatementPrintOption\": \"\",\r\n  \"udapLawApplies\": \"\",\r\n  \"overLimitOptionIndicator\": \"\",\r\n  \"printPaymentDueDay\": \"\",\r\n  \"processingType\": \"10\",\r\n  \"secureCardCTDDeposit\": \"\",\r\n  \"secureCardCTDInterest\": \"\",\r\n  \"secureCardCurrentBalance\": \"\",\r\n  \"secureCardInterestPaid\": \"\",\r\n  \"secureCardOpeningBalance\": \"\",\r\n  \"secureCardWithdraw\": \"\",\r\n  \"secureCardYTDInterest\": \"\",\r\n  \"personalBanker\": \"\",\r\n  \"accountPlan\": \"\",\r\n  \"individualStatementIndicator\": \"\",\r\n  \"masterAccountFirstDigit\": \"\",\r\n  \"masterAccountLastThirteenDigits\": \"\",\r\n  \"masterBin\": \"\",\r\n  \"consolidatedPaymentIndicator\": \"\",\r\n  \"consolidatedStatementIndicator\": \"\",\r\n  \"corpNameOverride\": \"\",\r\n  \"creditInterestIndicator\": \"\",\r\n  \"creditInterestTaxExempt\": \"\",\r\n  \"embossBusinessNameIndicator\": \"\",\r\n  \"embossFeeFlag\": \"\",\r\n  \"embossGroupCode\": \"\",\r\n  \"expeditedDeliveryIndicator\": \"\",\r\n  \"businessCardCostCenter\": \"\",\r\n  \"businessCardDepartment\": \"\",\r\n  \"businessCardDivision\": \"\",\r\n  \"businessCardEmployeeID\": \"\",\r\n  \"businessCardIndicator\": \"\",\r\n  \"businessCardReportOption\": \"\",\r\n  \"businessLevelFive\": \"\",\r\n  \"businessLevelFour\": \"\",\r\n  \"businessMediaFlag\": \"\",\r\n  \"annualStatementRequirement\": \"\",\r\n  \"associatedBin\": \"\",\r\n  \"associatedNumber\": \"\",\r\n  \"accountBin\": \"\",\r\n  \"accountSequence\": \"\",\r\n  \"aggregateCashLimit\": \"\",\r\n  \"aggregateCreditLimit\": \"\",\r\n  \"yearEndSummary\": \"\",\r\n  \"statementMailSublevelID\": \"\",\r\n  \"statmentDeliveryOption\": \"\",\r\n  \"travelAgent\": \"\",\r\n  \"accountTermsID\": \"\",\r\n  \"previousAccountTermsID\": \"\",\r\n  \"accountTermsIDChangeDate\": \"\",\r\n  \"enrollCEB\": \"\",\r\n  \"enrollBEB\": \"\",\r\n  \"userData12\": \"\",\r\n  \"userData13\": \"\",\r\n  \"userData14\": \"\",\r\n  \"userData15\": \"\",\r\n  \"userData16\": \"\",\r\n  \"userData17\": \"\",\r\n  \"userData18\": \"\",\r\n  \"userData19\": \"\",\r\n  \"userData20\": \"\",\r\n  \"userData21\": \"\",\r\n  \"userData22\": \"\",\r\n  \"userData23\": \"\",\r\n  \"userData24\": \"\",\r\n  \"userData25\": \"\",\r\n  \"userData26\": \"\",\r\n  \"userData27\": \"\",\r\n  \"userData28\": \"\",\r\n  \"userData29\": \"\",\r\n  \"userData30\": \"\",\r\n  \"userData31\": \"\",\r\n  \"userData32\": \"\",\r\n  \"userData33\": \"\",\r\n  \"userData34\": \"\",\r\n  \"userData35\": \"\",\r\n  \"userData36\": \"\",\r\n  \"userData37\": \"\",\r\n  \"userData38\": \"\",\r\n  \"userData39\": \"\",\r\n  \"userData40\": \"\",\r\n  \"userData41\": \"\",\r\n  \"userData42\": \"\",\r\n  \"userNumber4\": \"\",\r\n  \"userNumber5\": \"\",\r\n  \"userNumber6\": \"\",\r\n  \"userNumber7\": \"\",\r\n  \"userNumber8\": \"\",\r\n  \"userNumber9\": \"\",\r\n  \"employeeCostCenter\": \"\",\r\n  \"singleMultiIndicator\": \"\",\r\n  \"militaryIndicatorName1\": \"\",\r\n  \"militaryIndicatorName2\": \"\",\r\n  \"militaryIndicatorName3\": \"\",\r\n  \"militaryIndicatorName4\": \"\",\r\n  \"bulkShipIndicator\": \"\",\r\n  \"imageIDName1\": \"\",\r\n  \"imageIDName2\": \"\",\r\n  \"imageIDName3\": \"\",\r\n  \"imageIDName4\": \"\",\r\n  \"fundingAccount\": \"\",\r\n  \"coBorrowerAddressInd\": \"Y\",\r\n  \"coBorrowerAddressLineOne\": \"4466Dial Drive North\",\r\n  \"coBorrowerAddressLineTwo\": \"\",\r\n  \"coBorrowerAddressLineThree\": \"\",\r\n  \"coBorrowerCity\": \"Largo\",\r\n  \"coBorrowerState\": \"FL\",\r\n  \"coBorrowerZip\": \"33782-4455\",\r\n  \"coBorrowerForeignAddressIndicator\": \"\",\r\n  \"coBorrowerCountryCode\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/credit/account/v1",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"credit",
+								"account",
+								"v1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add New Account With Invalid details",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"corpID\": \"30\",\r\n  \"accountBinPrefix\": \"534607\",\r\n  \"commercialCardIndicator\": \"\",\r\n  \"product\": \"MVR\",\r\n  \"subproduct\": \"EMV\",\r\n  \"vipIndicator\": \"\",\r\n  \"lastNameOne\": \"Giant\",\r\n  \"firstNameOne\": \"Green\",\r\n  \"middleNameOne\": \"D\",\r\n  \"prefixNameOne\": \"\",\r\n  \"suffixNameOne\": \"\",\r\n  \"lastNameTwo\": \"Peas\",\r\n  \"firstNameTwo\": \"Green\",\r\n  \"middleNameTwo\": \"\",\r\n  \"prefixNameTwo\": \"\",\r\n  \"suffixNameTwo\": \"\",\r\n  \"lastNameThree\": \"\",\r\n  \"firstNameThree\": \"\",\r\n  \"middleNameThree\": \"\",\r\n  \"prefixNameThree\": \"\",\r\n  \"suffixNameThree\": \"\",\r\n  \"lastNameFour\": \"\",\r\n  \"firstNameFour\": \"\",\r\n  \"middleNameFour\": \"\",\r\n  \"prefixNameFour\": \"\",\r\n  \"suffixNameFour\": \"\",\r\n  \"corpName\": \"\",\r\n  \"companyID\": \"\",\r\n  \"sublevelNumber\": \"\",\r\n  \"sublevelID\": \"\",\r\n  \"consolidatedAccountType\": \"\",\r\n  \"consolidatedAccountBin\": \"\",\r\n  \"consolidatedAccountSequence\": \"\",\r\n  \"checkOrderCode\": \"\",\r\n  \"checkStartNumber\": \"\",\r\n  \"creditLifeInsurance\": \"\",\r\n  \"addressLineOne\": \"2000 Green Peas Avenue\",\r\n  \"homePhone\": \"9996777889\",\r\n  \"blockCode\": \"\",\r\n  \"reclassCode\": \"\",\r\n  \"screenRefresh\": \"\",\r\n  \"addressLineTwo\": \"\",\r\n  \"businessPhone\": \"\",\r\n  \"finalScore\": \"625\",\r\n  \"addressLineThree\": \"\",\r\n  \"thirdPhoneIndicator\": \"\",\r\n  \"thirdPhone\": \"\",\r\n  \"sourceCode\": \"\",\r\n  \"city\": \"Largo\",\r\n  \"personResponsibleNumber\": \"\",\r\n  \"approvalType\": \"\",\r\n  \"state\": \"FL\",\r\n  \"zip\": \"33782-4456\",\r\n  \"billCode\": \"MTRTVAR4\",\r\n  \"billDay\": \"17\",\r\n  \"creditLimit\": \"500\",\r\n  \"statementGroupCode\": \"\",\r\n  \"financeCharge\": \"\",\r\n  \"notifiedBillingCode\": \"\",\r\n  \"notifiedBillingCodeEffectiveDate\": \"\",\r\n  \"cashLimit\": \"\",\r\n  \"languageCode\": \"\",\r\n  \"memo\": \"\",\r\n  \"numberCardOneIssueNameOne\": \"0\",\r\n  \"numberCardTwoIssueNameOne\": \"1\",\r\n  \"primaryCardholderSpecialHandling\": \"\",\r\n  \"creditAssociationOne\": \"1\",\r\n  \"primaryCardholderSexCode\": \"\",\r\n  \"birthDateOne\": \"19851129\",\r\n  \"ssnOne\": \"657570092\",\r\n  \"cardOneType\": \"\",\r\n  \"cardTwoType\": \"M\",\r\n  \"numberCardOneIssueNameTwo\": \"0\",\r\n  \"numberCardTwoIssueNameTwo\": \"0\",\r\n  \"secondaryCardholderSpecialHandling\": \"\",\r\n  \"creditAssociationTwo\": \"2\",\r\n  \"secondaryCardholderSexCode\": \"\",\r\n  \"birthDateTwo\": \"19781004\",\r\n  \"ssnTwo\": \"663459898\",\r\n  \"cardAnnualFeeIndicator\": \"\",\r\n  \"secretCodeIndicator\": \"\",\r\n  \"numberCardOneIssueNameThree\": \"0\",\r\n  \"numberCardTwoIssueNameThree\": \"0\",\r\n  \"thirdCardholderSpecialHandling\": \"\",\r\n  \"creditAssociationThree\": \"\",\r\n  \"thirdCardholderSexCode\": \"\",\r\n  \"birthDateThree\": \"\",\r\n  \"ssnThree\": \"\",\r\n  \"rushCardMethod\": \"\",\r\n  \"suffix\": \"\",\r\n  \"numberCardOneIssueNameFour\": \"0\",\r\n  \"numberCardTwoIssueNameFour\": \"0\",\r\n  \"fourthCardholderSpecialHandling\": \"\",\r\n  \"creditAssociationFour\": \"\",\r\n  \"fourthCardholderSexCode\": \"\",\r\n  \"birthDateFour\": \"\",\r\n  \"ssnFour\": \"\",\r\n  \"createPlastics\": \"Y\",\r\n  \"paymentBookCode\": \"\",\r\n  \"paymentBookNumber\": \"\",\r\n  \"directMailIndicator\": \"\",\r\n  \"emergencyCardReplacementIndicator\": \"\",\r\n  \"expirationDateOverride\": \"\",\r\n  \"uniqueCustomerIDNumber\": \"\",\r\n  \"customerIDNameOneNumber\": \"\",\r\n  \"customerIDNameTwoNumber\": \"\",\r\n  \"customerIDNameThreeNumber\": \"\",\r\n  \"customerIDNameFourNumber\": \"\",\r\n  \"country\": \"\",\r\n  \"foreignIndicator\": \"\",\r\n  \"primaryDeliveryPoint\": \"\",\r\n  \"primaryDomicileBSB\": \"\",\r\n  \"primaryOwnerBSB\": \"\",\r\n  \"rushDeliveryMethod\": \"\",\r\n  \"primaryCardholderPhotoIndicator\": \"\",\r\n  \"secondaryCardholderPhotoIndicator\": \"\",\r\n  \"thirdCardholderPhotoIndicator\": \"\",\r\n  \"fourthCardholderPhotoIndicator\": \"\",\r\n  \"primaryCardholderMaritalStatus\": \"\",\r\n  \"secondaryCardholderMaritalStatus\": \"\",\r\n  \"thirdCardholderMaritalStatus\": \"\",\r\n  \"fourthCardholderMaritalStatus\": \"\",\r\n  \"governmentChargeIndicator\": \"\",\r\n  \"specialNeedsCode\": \"\",\r\n  \"currencyCode\": \"\",\r\n  \"loanTerms\": \"\",\r\n  \"offlinePINOption\": \"\",\r\n  \"fiscalYearEndMonth\": \"\",\r\n  \"payCode\": \"\",\r\n  \"payStatus\": \"\",\r\n  \"autoPayEffectiveDate\": \"\",\r\n  \"originalCenterID\": \"\",\r\n  \"autoPayPercentage\": \"\",\r\n  \"autoPayAmount\": \"\",\r\n  \"originalServiceCenterID\": \"\",\r\n  \"autoPayDay\": \"\",\r\n  \"autoPayFrequency\": \"\",\r\n  \"previousCenterID\": \"\",\r\n  \"ddaAcount\": \"\",\r\n  \"autoPayAccountType\": \"\",\r\n  \"aBARoutingNumber\": \"\",\r\n  \"bankAccountName\": \"\",\r\n  \"bankAccountCode\": \"\",\r\n  \"initialPaymentIndicator\": \"\",\r\n  \"holdPaymentExempt\": \"\",\r\n  \"serviceCenterIDUpdateDate\": \"\",\r\n  \"tempAmount\": \"\",\r\n  \"directDebitHoldMonthsNumber\": \"\",\r\n  \"loyaltyCode\": \"\",\r\n  \"companyName\": \"\",\r\n  \"sublevelTwo\": \"\",\r\n  \"sublevelTwoName\": \"\",\r\n  \"sublevelThree\": \"\",\r\n  \"sublevelThreeName\": \"\",\r\n  \"sublevelFour\": \"\",\r\n  \"sublevelFourName\": \"\",\r\n  \"sublevelFive\": \"\",\r\n  \"sublevelFiveName\": \"\",\r\n  \"sublevelSix\": \"\",\r\n  \"sublevelSixName\": \"\",\r\n  \"promoMailGroup\": \"\",\r\n  \"statementMailPreferences\": \"\",\r\n  \"statementMailSublevel\": \"\",\r\n  \"mcAuditNumber\": \"\",\r\n  \"taxExemptIndicator\": \"\",\r\n  \"letterMailPreference\": \"\",\r\n  \"letterMailSublevel\": \"\",\r\n  \"letterMailSublevelID\": \"\",\r\n  \"transferSublevelNumber\": \"\",\r\n  \"transferSublevelID\": \"\",\r\n  \"trackingCode\": \"\",\r\n  \"branchNumber\": \"\",\r\n  \"transferOption\": \"\",\r\n  \"countryCode\": \"\",\r\n  \"branchAttentionTo\": \"\",\r\n  \"parameterSettings\": \"\",\r\n  \"activeHours\": \"\",\r\n  \"tempAuthorizationBlockCode\": \"\",\r\n  \"cardMailPreference\": \"\",\r\n  \"cardMailSublevel\": \"\",\r\n  \"cardMailSublevelID\": \"\",\r\n  \"mobilePhone\": \"\",\r\n  \"contactPhone\": \"\",\r\n  \"mailAddressLineOne\": \"\",\r\n  \"mailAddressLineTwo\": \"\",\r\n  \"mailAddressLineThree\": \"\",\r\n  \"mailCity\": \"\",\r\n  \"mailState\": \"\",\r\n  \"mailZIP\": \"\",\r\n  \"mailCountry\": \"\",\r\n  \"mailForeignAddressIndicator\": \"\",\r\n  \"mailDeliveryPoint\": \"\",\r\n  \"embossNameOne\": \"\",\r\n  \"embossNameTwo\": \"\",\r\n  \"embossNameThree\": \"\",\r\n  \"embossNameFour\": \"\",\r\n  \"embossLineFour\": \"\",\r\n  \"salutationTitle\": \"\",\r\n  \"primaryEmail\": \"\",\r\n  \"primaryFax\": \"\",\r\n  \"primaryLetterDeliveryCode\": \"\",\r\n  \"primaryStatementDeliveryCode\": \"\",\r\n  \"primaryCardDeliveryCode\": \"\",\r\n  \"primaryPINDeliveryCode\": \"\",\r\n  \"tempBeginingDate\": \"\",\r\n  \"tempEndDate\": \"\",\r\n  \"tempAddressLineOne\": \"\",\r\n  \"tempAddressLineTwo\": \"\",\r\n  \"tempAddressLineThree\": \"\",\r\n  \"tempAddressLineFour\": \"\",\r\n  \"tempZIPCode\": \"\",\r\n  \"tempStateCode\": \"\",\r\n  \"tempCountryCode\": \"\",\r\n  \"tempMailForeignAddressIndicator\": \"\",\r\n  \"tempDeliveryPoint\": \"\",\r\n  \"tempEmail\": \"\",\r\n  \"tempFaxNumber\": \"\",\r\n  \"tempStatementDeliveryCode\": \"\",\r\n  \"tempLetterDeliveryCode\": \"\",\r\n  \"tempCardDeliveryCode\": \"\",\r\n  \"tempPINDeliveryCode\": \"\",\r\n  \"tempDomicileBSB\": \"\",\r\n  \"accountActionCode\": \"\",\r\n  \"applicationID\": \"\",\r\n  \"taxIndicator\": \"\",\r\n  \"regulatoryState\": \"\",\r\n  \"bypassRoutingNumberCheck\": \"\",\r\n  \"userDataOne\": \"ONN\",\r\n  \"userDataTwo\": \"\",\r\n  \"userDataThree\": \"\",\r\n  \"userDataFour\": \"\",\r\n  \"userDataFive\": \"\",\r\n  \"userDataSix\": \"\",\r\n  \"userDataSeven\": \"\",\r\n  \"userDataEight\": \"\",\r\n  \"userDataNine\": \"\",\r\n  \"userDataTen\": \"\",\r\n  \"userDataEleven\": \"\",\r\n  \"userNumberOne\": \"\",\r\n  \"userNumberTwo\": \"\",\r\n  \"userNumberThree\": \"\",\r\n  \"loyaltyIndicator\": \"\",\r\n  \"annualStatement\": \"\",\r\n  \"fleetCardAccountType\": \"\",\r\n  \"fleetAccountID\": \"\",\r\n  \"fleetCardProductRestriction\": \"\",\r\n  \"fleetCardPrompt\": \"\",\r\n  \"fleetCardAuthorizationOverride\": \"\",\r\n  \"physicalAddressLineOne\": \"\",\r\n  \"physicalAddressLineTwo\": \"\",\r\n  \"physicalAddressCity\": \"\",\r\n  \"physicalAddressState\": \"\",\r\n  \"physicalAddressZIP\": \"\",\r\n  \"nearestRelative\": \"\",\r\n  \"relativePhone\": \"\",\r\n  \"overdraftProtectionIndicator\": \"\",\r\n  \"reinstateChangeAccountIndicator\": \"\",\r\n  \"primaryAccountIndicator\": \"\",\r\n  \"specialAccountIndicator\": \"\",\r\n  \"minPayCode\": \"\",\r\n  \"rewardsIndicator\": \"\",\r\n  \"feeOptionIndicator\": \"\",\r\n  \"bonusOptionIndicator\": \"\",\r\n  \"rewardsCapOptionIndicator\": \"\",\r\n  \"relationshipManagerNumber\": \"\",\r\n  \"salesRepInitials\": \"\",\r\n  \"approvingOfficerNumber\": \"\",\r\n  \"referingOfficerNumber\": \"\",\r\n  \"relationshipBankerNumber\": \"\",\r\n  \"coApprovingOfficer\": \"\",\r\n  \"bsaOfficer\": \"\",\r\n  \"salesOfficer\": \"\",\r\n  \"maintenanceOfficer\": \"\",\r\n  \"cliCoApprovingOfficer\": \"\",\r\n  \"agreementExpirationDate\": \"\",\r\n  \"deedTrustExpirationDate\": \"\",\r\n  \"convertedOpenDate\": \"\",\r\n  \"maturityDate\": \"\",\r\n  \"hazardingDate\": \"\",\r\n  \"floodingDate\": \"\",\r\n  \"promoAcceptanceSource\": \"\",\r\n  \"promoID\": \"\",\r\n  \"atmAccount\": \"\",\r\n  \"balanceTransferPromoExtension\": \"\",\r\n  \"purchasePromoExtension\": \"\",\r\n  \"overdraftAccount\": \"\",\r\n  \"profitCode\": \"\",\r\n  \"relationshipCode\": \"\",\r\n  \"campaignCode\": \"\",\r\n  \"employeeProfitCenter\": \"\",\r\n  \"collateralDescription\": \"\",\r\n  \"scorecardScore\": \"\",\r\n  \"institutionID\": \"\",\r\n  \"cviScore\": \"\",\r\n  \"cviReasonCodeOne\": \"\",\r\n  \"cviReasonCodeTwo\": \"\",\r\n  \"cviReasonCodeThree\": \"\",\r\n  \"cviReasonCodeFour\": \"\",\r\n  \"cviReasonCodeFive\": \"\",\r\n  \"cviReasonCodeSix\": \"\",\r\n  \"fraudDefenderScore\": \"\",\r\n  \"qAScore\": \"\",\r\n  \"fraudDefenderReasonCodeOne\": \"\",\r\n  \"fraudDefenderReasonCodeTwo\": \"\",\r\n  \"fraudDefenderReasonCodeThree\": \"\",\r\n  \"fraudDefenderReasonCodeFour\": \"\",\r\n  \"fraudDefenderReasonCodeFive\": \"\",\r\n  \"fraudDefenderReasonCodeSix\": \"\",\r\n  \"originalBeaconScore\": \"\",\r\n  \"originalBankruptcyScore\": \"\",\r\n  \"suppressPINMailer\": \"\",\r\n  \"embossNameIndicator\": \"\",\r\n  \"creditLifeAgeReviewOption\": \"\",\r\n  \"otherPhoneTwo\": \"\",\r\n  \"otherPhoneTwoType\": \"\",\r\n  \"otherPhoneThree\": \"\",\r\n  \"otherPhoneThreeType\": \"\",\r\n  \"collateralAccount\": \"\",\r\n  \"consolidatedCardStatementPrintOption\": \"\",\r\n  \"udapLawApplies\": \"\",\r\n  \"overLimitOptionIndicator\": \"\",\r\n  \"printPaymentDueDay\": \"\",\r\n  \"processingType\": \"10\",\r\n  \"secureCardCTDDeposit\": \"\",\r\n  \"secureCardCTDInterest\": \"\",\r\n  \"secureCardCurrentBalance\": \"\",\r\n  \"secureCardInterestPaid\": \"\",\r\n  \"secureCardOpeningBalance\": \"\",\r\n  \"secureCardWithdraw\": \"\",\r\n  \"secureCardYTDInterest\": \"\",\r\n  \"personalBanker\": \"\",\r\n  \"accountPlan\": \"\",\r\n  \"individualStatementIndicator\": \"\",\r\n  \"masterAccountFirstDigit\": \"\",\r\n  \"masterAccountLastThirteenDigits\": \"\",\r\n  \"masterBin\": \"\",\r\n  \"consolidatedPaymentIndicator\": \"\",\r\n  \"consolidatedStatementIndicator\": \"\",\r\n  \"corpNameOverride\": \"\",\r\n  \"creditInterestIndicator\": \"\",\r\n  \"creditInterestTaxExempt\": \"\",\r\n  \"embossBusinessNameIndicator\": \"\",\r\n  \"embossFeeFlag\": \"\",\r\n  \"embossGroupCode\": \"\",\r\n  \"expeditedDeliveryIndicator\": \"\",\r\n  \"businessCardCostCenter\": \"\",\r\n  \"businessCardDepartment\": \"\",\r\n  \"businessCardDivision\": \"\",\r\n  \"businessCardEmployeeID\": \"\",\r\n  \"businessCardIndicator\": \"\",\r\n  \"businessCardReportOption\": \"\",\r\n  \"businessLevelFive\": \"\",\r\n  \"businessLevelFour\": \"\",\r\n  \"businessMediaFlag\": \"\",\r\n  \"annualStatementRequirement\": \"\",\r\n  \"associatedBin\": \"\",\r\n  \"associatedNumber\": \"\",\r\n  \"accountBin\": \"\",\r\n  \"accountSequence\": \"\",\r\n  \"aggregateCashLimit\": \"\",\r\n  \"aggregateCreditLimit\": \"\",\r\n  \"yearEndSummary\": \"\",\r\n  \"statementMailSublevelID\": \"\",\r\n  \"statmentDeliveryOption\": \"\",\r\n  \"travelAgent\": \"\",\r\n  \"accountTermsID\": \"\",\r\n  \"previousAccountTermsID\": \"\",\r\n  \"accountTermsIDChangeDate\": \"\",\r\n  \"enrollCEB\": \"\",\r\n  \"enrollBEB\": \"\",\r\n  \"userData12\": \"\",\r\n  \"userData13\": \"\",\r\n  \"userData14\": \"\",\r\n  \"userData15\": \"\",\r\n  \"userData16\": \"\",\r\n  \"userData17\": \"\",\r\n  \"userData18\": \"\",\r\n  \"userData19\": \"\",\r\n  \"userData20\": \"\",\r\n  \"userData21\": \"\",\r\n  \"userData22\": \"\",\r\n  \"userData23\": \"\",\r\n  \"userData24\": \"\",\r\n  \"userData25\": \"\",\r\n  \"userData26\": \"\",\r\n  \"userData27\": \"\",\r\n  \"userData28\": \"\",\r\n  \"userData29\": \"\",\r\n  \"userData30\": \"\",\r\n  \"userData31\": \"\",\r\n  \"userData32\": \"\",\r\n  \"userData33\": \"\",\r\n  \"userData34\": \"\",\r\n  \"userData35\": \"\",\r\n  \"userData36\": \"\",\r\n  \"userData37\": \"\",\r\n  \"userData38\": \"\",\r\n  \"userData39\": \"\",\r\n  \"userData40\": \"\",\r\n  \"userData41\": \"\",\r\n  \"userData42\": \"\",\r\n  \"userNumber4\": \"\",\r\n  \"userNumber5\": \"\",\r\n  \"userNumber6\": \"\",\r\n  \"userNumber7\": \"\",\r\n  \"userNumber8\": \"\",\r\n  \"userNumber9\": \"\",\r\n  \"employeeCostCenter\": \"\",\r\n  \"singleMultiIndicator\": \"\",\r\n  \"militaryIndicatorName1\": \"\",\r\n  \"militaryIndicatorName2\": \"\",\r\n  \"militaryIndicatorName3\": \"\",\r\n  \"militaryIndicatorName4\": \"\",\r\n  \"bulkShipIndicator\": \"\",\r\n  \"imageIDName1\": \"\",\r\n  \"imageIDName2\": \"\",\r\n  \"imageIDName3\": \"\",\r\n  \"imageIDName4\": \"\",\r\n  \"fundingAccount\": \"\",\r\n  \"coBorrowerAddressInd\": \"Y\",\r\n  \"coBorrowerAddressLineOne\": \"4466Dial Drive North\",\r\n  \"coBorrowerAddressLineTwo\": \"\",\r\n  \"coBorrowerAddressLineThree\": \"\",\r\n  \"coBorrowerCity\": \"Largo\",\r\n  \"coBorrowerState\": \"FL\",\r\n  \"coBorrowerZip\": \"33782-4455\",\r\n  \"coBorrowerForeignAddressIndicator\": \"\",\r\n  \"coBorrowerCountryCode\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/credit/account/v1",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"credit",
+								"account",
+								"v1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Card Status",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "uuid",
+								"value": "23746973-f3f0-4d04-a387-48eecf7b5338",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"pan\": {\r\n    \"plainText\": \"4053232690633133\",\r\n    \"cipherText\": \"\",\r\n    \"alias\": \"\"\r\n  },\r\n  \"blockCode\": \"A\",\r\n  \"reclassCode\": \"A\",\r\n  \"fixedPaymentIndicator\": \"string\",\r\n  \"fixedPaymentAmount\": \"string\",\r\n  \"closureReason\": \"string\",\r\n  \"consumerInfoIndicator\": \"string\",\r\n  \"consumerInfoIndicatorTwo\": \"string\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{fis-api:apiUrl}}/api/credit/ccs/v1",
+							"host": [
+								"{{fis-api:apiUrl}}"
+							],
+							"path": [
+								"api",
+								"credit",
+								"ccs",
+								"v1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{fis-api:bearerToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const echoOktaPostRequest = {",
+							"    url: pm.environment.get('fis-api:auth:server'),",
+							"    method: 'POST',",
+							"    header: 'Content-Type:application/x-www-form-urlencoded',",
+							"    body: {",
+							"        mode: 'urlencoded',",
+							"        urlencoded: [",
+							"            { key: \"client_id\", value: pm.environment.get('fis-api:auth:clientId'), disabled: false },",
+							"            { key: \"client_secret\", value: pm.environment.get('fis-api:auth:clientSecret'), disabled: false },",
+							"            { key: \"audience\", value: pm.environment.get('fis-api:auth:audience'), disabled: false },",
+							"            { key: \"grant_type\", value: pm.environment.get('fis-api:auth:grantType'), disabled: false },",
+							"            { key: \"scope\", value: \"read:fis\", disabled: false }",
+							"        ]",
+							"    }",
+							"};",
+							"",
+							"var getToken = true;",
+							"",
+							"if (!pm.environment.get('fis-api:bearerToken:expires') ||",
+							"    !pm.environment.get('fis-api:bearerToken')) {",
+							"    console.log('Token or expiry date are missing')",
+							"} else if (pm.environment.get('fis-api:bearerToken:expires') <= (new Date()).getTime()) {",
+							"    console.log('Token is expired')",
+							"} else {",
+							"    getToken = false;",
+							"    console.log('Token and expiry date are all good');",
+							"}",
+							"",
+							"if (getToken === true) {",
+							"",
+							"    pm.sendRequest(echoOktaPostRequest, function (err, res) {",
+							"        console.log(err ? err : res.json());",
+							"        if (err === null) {",
+							"            console.log('Saving the token and expiry date')",
+							"            var responseJson = res.json();",
+							"            pm.environment.set('fis-api:bearerToken', responseJson.access_token)",
+							"",
+							"            var expiryDate = new Date();",
+							"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.expires_in);",
+							"            pm.environment.set('fis-api:bearerToken:expires', expiryDate.getTime());",
+							"        }",
+							"    });",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "FISSSO-API",
+			"item": [
+				{
+					"name": "read:token read:cards",
+					"item": [
+						{
+							"name": "Get cards",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{fissso-api:apiUrl}}/getcards/sso?partyId=430068",
+									"host": [
+										"{{fissso-api:apiUrl}}"
+									],
+									"path": [
+										"getcards",
+										"sso"
+									],
+									"query": [
+										{
+											"key": "partyId",
+											"value": "430068"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get SSO Token",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{fissso-api:apiUrl}}/ssotoken?partyId=430068&ccNumber=9494&email=joe@servus.ca",
+									"host": [
+										"{{fissso-api:apiUrl}}"
+									],
+									"path": [
+										"ssotoken"
+									],
+									"query": [
+										{
+											"key": "partyId",
+											"value": "430068"
+										},
+										{
+											"key": "ccNumber",
+											"value": "9494"
+										},
+										{
+											"key": "email",
+											"value": "joe@servus.ca"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const echoOktaPostRequest = {",
+									"    url: pm.environment.get('fissso-api:auth:server'),",
+									"    method: 'POST',",
+									"    header: 'Content-Type:application/x-www-form-urlencoded',",
+									"    body: {",
+									"        mode: 'urlencoded',",
+									"        urlencoded: [",
+									"            { key: \"client_id\", value: pm.environment.get('fissso-api:auth:clientId'), disabled: false },",
+									"            { key: \"client_secret\", value: pm.environment.get('fissso-api:auth:clientSecret'), disabled: false },",
+									"            { key: \"audience\", value: pm.environment.get('fissso-api:auth:audience'), disabled: false },",
+									"            { key: \"grant_type\", value: pm.environment.get('fissso-api:auth:grantType'), disabled: false },",
+									"            { key: \"scope\", value: \"read:cards read:token\", disabled: false }",
+									"        ]",
+									"    }",
+									"};",
+									"",
+									"var getToken = true;",
+									"",
+									"if (!pm.environment.get('fissso-api:bearerToken:expires') ||",
+									"    !pm.environment.get('fissso-api:bearerToken')) {",
+									"    console.log('Token or expiry date are missing')",
+									"} else if (pm.environment.get('fissso-api:bearerToken:expires') <= (new Date()).getTime()) {",
+									"    console.log('Token is expired')",
+									"} else {",
+									"    getToken = false;",
+									"    console.log('Token and expiry date are all good');",
+									"}",
+									"",
+									"if (getToken === true) {",
+									"",
+									"    pm.sendRequest(echoOktaPostRequest, function (err, res) {",
+									"        console.log(err ? err : res.json());",
+									"        if (err === null) {",
+									"            console.log('Saving the token and expiry date')",
+									"            var responseJson = res.json();",
+									"            pm.environment.set('fissso-api:bearerToken', responseJson.access_token)",
+									"",
+									"            var expiryDate = new Date();",
+									"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.expires_in);",
+									"            pm.environment.set('fissso-api:bearerToken:expires', expiryDate.getTime());",
+									"        }",
+									"    });",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "healthcheck",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fissso-api:apiUrl}}/healthcheck",
+							"host": [
+								"{{fissso-api:apiUrl}}"
+							],
+							"path": [
+								"healthcheck"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{fissso-api:bearerToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "BAT-API",
+			"item": [
+				{
+					"name": "submission",
+					"item": [
+						{
+							"name": "data - get member",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{memberNumber:54320}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{bat-api:apiUrl}}/api/bat/member/",
+									"host": [
+										"{{bat-api:apiUrl}}"
+									],
+									"path": [
+										"api",
+										"bat",
+										"member",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{bat-api:submission:bearerToken}}",
+								"type": "string"
+							}
+						]
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const echoOktaPostRequest = {",
+									"    url: pm.environment.get('bat-api:auth:server'),",
+									"    method: 'POST',",
+									"    header: 'Content-Type:application/x-www-form-urlencoded',",
+									"    body: {",
+									"        mode: 'urlencoded',",
+									"        urlencoded: [",
+									"            { key: \"client_id\", value: pm.environment.get('bat-api:auth:clientId'), disabled: false },",
+									"            { key: \"client_secret\", value: pm.environment.get('bat-api:auth:clientSecret'), disabled: false },",
+									"            { key: \"audience\", value: pm.environment.get('bat-api:auth:audience'), disabled: false },",
+									"            { key: \"grant_type\", value: pm.environment.get('bat-api:auth:grantType'), disabled: false },",
+									"            { key: \"scope\", value: \"submission\", disabled: false }",
+									"        ]",
+									"    }",
+									"};",
+									"",
+									"var getToken = true;",
+									"",
+									"if (!pm.environment.get('bat-api:submission:bearerToken:expires') ||",
+									"    !pm.environment.get('bat-api:submission:bearerToken')) {",
+									"    console.log('Token or expiry date are missing')",
+									"} else if (pm.environment.get('bat-api:submission:bearerToken:expires') <= (new Date()).getTime()) {",
+									"    console.log('Token is expired')",
+									"} else {",
+									"    getToken = false;",
+									"    console.log('Token and expiry date are all good');",
+									"}",
+									"",
+									"if (getToken === true) {",
+									"",
+									"    pm.sendRequest(echoOktaPostRequest, function (err, res) {",
+									"        console.log(err ? err : res.json());",
+									"        if (err === null) {",
+									"            console.log('Saving the token and expiry date')",
+									"            var responseJson = res.json();",
+									"            pm.environment.set('bat-api:submission:bearerToken', responseJson.access_token)",
+									"",
+									"            var expiryDate = new Date();",
+									"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.expires_in);",
+									"            pm.environment.set('bat-api:submission:bearerToken:expires', expiryDate.getTime());",
+									"        }",
+									"    });",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "admin",
+					"item": [
+						{
+							"name": "Promotion Rates - get",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{bat-api:apiUrl}}/api/promotion/promotionrates",
+									"host": [
+										"{{bat-api:apiUrl}}"
+									],
+									"path": [
+										"api",
+										"promotion",
+										"promotionrates"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{bat-api:admin:bearerToken}}",
+								"type": "string"
+							}
+						]
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const echoOktaPostRequest = {",
+									"    url: pm.environment.get('bat-api:auth:server'),",
+									"    method: 'POST',",
+									"    header: 'Content-Type:application/x-www-form-urlencoded',",
+									"    body: {",
+									"        mode: 'urlencoded',",
+									"        urlencoded: [",
+									"            { key: \"client_id\", value: pm.environment.get('bat-api:auth:clientId'), disabled: false },",
+									"            { key: \"client_secret\", value: pm.environment.get('bat-api:auth:clientSecret'), disabled: false },",
+									"            { key: \"audience\", value: pm.environment.get('bat-api:auth:audience'), disabled: false },",
+									"            { key: \"grant_type\", value: pm.environment.get('bat-api:auth:grantType'), disabled: false },",
+									"            { key: \"scope\", value: \"admin\", disabled: false }",
+									"        ]",
+									"    }",
+									"};",
+									"",
+									"var getToken = true;",
+									"",
+									"if (!pm.environment.get('bat-api:admin:bearerToken:expires') ||",
+									"    !pm.environment.get('bat-api:admin:bearerToken')) {",
+									"    console.log('Token or expiry date are missing')",
+									"} else if (pm.environment.get('bat-api:admin:bearerToken:expires') <= (new Date()).getTime()) {",
+									"    console.log('Token is expired')",
+									"} else {",
+									"    getToken = false;",
+									"    console.log('Token and expiry date are all good');",
+									"}",
+									"",
+									"if (getToken === true) {",
+									"",
+									"    pm.sendRequest(echoOktaPostRequest, function (err, res) {",
+									"        console.log(err ? err : res.json());",
+									"        if (err === null) {",
+									"            console.log('Saving the token and expiry date')",
+									"            var responseJson = res.json();",
+									"            pm.environment.set('bat-api:admin:bearerToken', responseJson.access_token)",
+									"",
+									"            var expiryDate = new Date();",
+									"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.expires_in);",
+									"            pm.environment.set('bat-api:admin:bearerToken:expires', expiryDate.getTime());",
+									"        }",
+									"    });",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "healthcheck",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{bat-api:apiUrl}}/healthcheck",
+							"host": [
+								"{{bat-api:apiUrl}}"
+							],
+							"path": [
+								"healthcheck"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{bat-api:bearerToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	]
+}
